@@ -15,7 +15,7 @@ tablero = creaTablero 4
 
 --Crea lineas vacías (posiciones sin ficha en el tablero)
 vacio :: Int -> [[String]]
-vacio n = replicate n [" * " | x<-[1..8]]
+vacio n = replicate n [" * " | x<-[0..8]]
 -- función con lista por compresión
 
 
@@ -37,8 +37,8 @@ creaTablero n
 
 --Comprobar si el juego ha terminado
 finalizado :: Matrix String -> Int -> Bool
-finalizado m 1 = not(or [elem 'B' (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
-finalizado m 2 = not(or [elem 'N' (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
+finalizado m 1 = not(or [elem 'B' (getElem x y m) | x<-[0..8], y<-[1..(nrows m)]])
+finalizado m 2 = not(or [elem 'N' (getElem x y m) | x<-[0..8], y<-[1..(nrows m)]])
 
 
 --Movemos pieza de la posición (x, y) a la posición (xf, yf), nos comemos la del rival si está en la posición (xf, yf)
@@ -123,8 +123,8 @@ posicionYFicha m x xp = yp + 1
 --Convertimos la fila a un String para poderla imprimir
 filaString :: String -> [String] -> String
 filaString a (x:xs)
-    | length xs == 1 = (a++" | " ++x)
-    |otherwise = filaString (a++" | " ++x) xs
+    | length xs == 0 = (a ++" | " ++ x)
+    |otherwise = filaString (a ++" | " ++ x) xs
 
 
 --Escribimos la fila por pantalla
