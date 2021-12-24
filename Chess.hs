@@ -193,7 +193,7 @@ aleatorio (x, y) n = randomR (x, y) (mkStdGen n)
 
 mueveIA :: Matrix String -> [String] -> Int -> Matrix String
 mueveIA m xs al = if (valido m (x,y) (xf,yf) 2) then mover m (x,y) (xf,yf) 2 else mueveIA m xs (al+2)
-    where a = fst (aleatorio (0, (length xs)) al)
+    where a = fst (aleatorio (0, (length xs)-1) al)
           ficha = xs !! a
           x = posicionXFicha m ficha
           y = posicionYFicha m ficha x
@@ -208,9 +208,7 @@ juegoIA t j al= do
         let piezasJugador = fichasJugador t 2
         let ti = mueveIA t piezasJugador al
         let j2 = siguiente j
-        putStr "ia \n"
-        escribeTablero ti
-        putStr " tablero"
+        putStrLn "Siguiente turno \n \n"
         juegoIA ti j2 (al+2)
     else do
         putStr " \n"
