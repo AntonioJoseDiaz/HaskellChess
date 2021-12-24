@@ -3,6 +3,7 @@ import Data.List
 import Data.Matrix
 import Data.Char
 import Data.String
+import System.Random
 
 fnQ = ["TN1", "CN1", "AN1", "QN ", "KN ", "AN2", "CN2", "TN2"]
 fnP = ["PN1", "PN2", "PN3", "PN4", "PN5", "PN6", "PN7", "PN8"]
@@ -15,7 +16,7 @@ tablero = creaTablero 4
 
 --Crea lineas vacías (posiciones sin ficha en el tablero)
 vacio :: Int -> [[String]]
-vacio n = replicate n [" * " | x<-[0..8]]
+vacio n = replicate n [" * " | x<-[1..8]]
 -- función con lista por compresión
 
 
@@ -37,8 +38,8 @@ creaTablero n
 
 --Comprobar si el juego ha terminado
 finalizado :: Matrix String -> Int -> Bool
-finalizado m 1 = not(or [elem 'B' (getElem x y m) | x<-[0..8], y<-[1..(nrows m)]])
-finalizado m 2 = not(or [elem 'N' (getElem x y m) | x<-[0..8], y<-[1..(nrows m)]])
+finalizado m 1 = not(or [elem 'B' (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
+finalizado m 2 = not(or [elem 'N' (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
 
 
 --Movemos pieza de la posición (x, y) a la posición (xf, yf), nos comemos la del rival si está en la posición (xf, yf)
@@ -60,7 +61,7 @@ valido m (x,y) (xf, yf) j = if (j==1) then not (elem 'N' sust) && mov else not (
 --Comprobamos si el movimiento que queremos hacer sobre la pieza es correcto en función de qué pieza movamos
 movimiento :: (Int, Int) -> (Int, Int) -> Int -> String -> String -> Bool
 movimiento (x,y) (xf, yf) j pieza sust
-    |elem 'T' pieza = x==xf
+    |elem 'T' pieza = (x==xf) || (y==yf)
     |elem 'C' pieza = ((abs (xf -x)) == 1 && (abs (yf - y)) == 2)
     |elem 'K' pieza = ((abs (xf -x)) == 1 && (abs (yf - y)) == 1)
     |elem 'P' pieza = if j==1 then if elem 'B' sust then (xf-x==1) && abs(yf - y)==1 else (xf-x==1) && yf==y 
@@ -142,14 +143,14 @@ escribeTablero t = do
 fichasJugador :: Matrix String -> Int -> [String]
 fichasJugador m j =piezas
      where lista = toLists m
-           piezas = foldr f [" "] lista
+           piezas = foldr f [] lista
            f xs zs 
                 | length xs == 0 = zs
                 | otherwise = zs ++ (fichasLinea xs j) 
 
 --Dunción auxiliar para conseguir las piezas del jugador en la línea indicada
 fichasLinea :: [String] -> Int -> [String]
-fichasLinea xs j = foldr f [" "] xs
+fichasLinea xs j = foldr f [] xs
     where f x zs 
             | j == 1 && (elem 'N' x) = (x:zs)
             | j == 2 && (elem 'B' x) = (x:zs)
@@ -185,3 +186,54 @@ juego t j = do
     
 empezarJuego :: IO()
 empezarJuego = juego tablero 1
+
+
+aleatorio :: (Int, Int) -> Int -> (Int, StdGen)
+aleatorio (x, y) n = randomR (x, y) (mkStdGen n)
+
+mueveIA :: Matrix String -> [String] -> Int -> Matrix String
+mueveIA m xs al = if (valido m (x,y) (xf,yf) 2) then mover m (x,y) (xf,yf) 2 else mueveIA m xs (al+2)
+    where a = fst (aleatorio (0, (length xs)) al)
+          ficha = xs !! a
+          x = posicionXFicha m ficha
+          y = posicionYFicha m ficha x
+          xf = fst (aleatorio (1,8) al)
+          yf = fst (aleatorio (1,8) (al+2))
+
+
+juegoIA :: Matrix String -> Int -> Int -> IO ()
+juegoIA t j al= do
+
+    if (j==2) then do
+        let piezasJugador = fichasJugador t 2
+        let ti = mueveIA t piezasJugador al
+        let j2 = siguiente j
+        putStr "ia \n"
+        escribeTablero ti
+        putStr " tablero"
+        juegoIA ti j2 (al+2)
+    else do
+        putStr " \n"
+        escribeTablero t
+        putStr " \n "
+        putStrLn $ "Jugador " ++ show j
+
+        let piezasJugador = fichasJugador t j
+
+        f <- leeFicha "Elije una ficha: " piezasJugador
+        let x = posicionXFicha t f
+        let y = posicionYFicha t f x
+        xf <- leeDigito "Elije fila de movimiento: "
+        yf <- leeDigito "Elije columna de movimiento: "
+
+        if (valido t (x, y) (xf, yf) j) then do
+            let t2 = mover t (x, y) (xf, yf) j
+            if finalizado t2 j then do
+                putStr " \n "
+                escribeTablero t2
+                putStrLn $ " \n J " ++ show j ++ " ha ganado!"
+            else do
+                let j2 = siguiente j
+                escribeTablero t2
+                juegoIA t2 j2 al
+        else juegoIA t j al
