@@ -90,6 +90,18 @@ leeDigito c = do
         putStrLn "ERROR: Entrada incorrecta"
         leeDigito c
 
+
+--Leemos el modo de juego
+leeModo :: String -> IO String
+leeModo c = do
+    putStr c
+    ts <- getLine
+    if (ts=="PvP" || ts=="PvC") then
+        return ts
+    else do
+        putStrLn "ERROR: Entrada incorrecta"
+        leeModo c
+
 --Leemos la pieza a mover introducida y comprobamos si es válida
 leeFicha :: String  -> [String] ->IO String
 leeFicha c piezas= do
@@ -184,13 +196,13 @@ juego t j = do
             juego t2 j2
     else juego t j
     
-empezarJuego :: IO()
-empezarJuego = juego tablero 1
 
-
+-- Genera número aleatorio en un rango
 aleatorio :: (Int, Int) -> Int -> (Int, StdGen)
 aleatorio (x, y) n = randomR (x, y) (mkStdGen n)
 
+
+--Movimiento aleatorio de una ficha aleatoria
 mueveIA :: Matrix String -> [String] -> Int -> Matrix String
 mueveIA m xs al = if (valido m (x,y) (xf,yf) 2) then mover m (x,y) (xf,yf) 2 else mueveIA m xs (al+2)
     where a = fst (aleatorio (0, (length xs)-1) al)
@@ -235,3 +247,15 @@ juegoIA t j al= do
                 escribeTablero t2
                 juegoIA t2 j2 al
         else juegoIA t j al
+
+
+jugar :: IO()
+jugar= do
+    putStrLn "Seleccionar modo de juego: PvP o PvC"
+    modo <- leeModo "Modo de juego: "
+    if (modo == "PvP") then do
+        juego tablero 1
+    else do
+        numero <- leeDigito "seleccionar número par para empezar: "
+        juegoIA tablero 1 numero
+        
