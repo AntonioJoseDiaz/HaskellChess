@@ -38,8 +38,8 @@ creaTablero n
 
 --Comprobar si el juego ha terminado
 finalizado :: Matrix String -> Int -> Bool
-finalizado m 1 = not(or [elem 'B' (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
-finalizado m 2 = not(or [elem 'N' (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
+finalizado m 1 = not(or ["KB " == (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
+finalizado m 2 = not(or ["KN " == (getElem x y m) | x<-[1..8], y<-[1..(nrows m)]])
 
 
 --Movemos pieza de la posición (x, y) a la posición (xf, yf), nos comemos la del rival si está en la posición (xf, yf)
@@ -64,6 +64,8 @@ movimiento (x,y) (xf, yf) j pieza sust
     |elem 'T' pieza = (x==xf) || (y==yf)
     |elem 'C' pieza = ((abs (xf -x)) == 1 && (abs (yf - y)) == 2)
     |elem 'K' pieza = ((abs (xf -x)) == 1 && (abs (yf - y)) == 1)
+    |elem 'A' pieza = ((abs (xf -x)) == (abs (yf - y)))
+    |elem 'Q' pieza = ((abs (xf -x)) == (abs (yf - y))) || (x==xf) || (y==yf) || ((abs (xf -x)) == 1 && (abs (yf - y)) == 1)
     |elem 'P' pieza = if j==1 then if elem 'B' sust then (xf-x==1) && abs(yf - y)==1 else (xf-x==1) && yf==y 
                     else if elem 'N' sust then (x - xf==1) && abs(yf - y)==1 else (x - xf==1) && yf==y
     |otherwise = (abs(xf-x) == abs (yf-y)) || x==xf || y==yf
@@ -239,7 +241,7 @@ juegoIA t j al= do
         if (valido t (x, y) (xf, yf) j) then do
             let t2 = mover t (x, y) (xf, yf) j
             if finalizado t2 j then do
-                putStr " \n "
+                putStr " \n"
                 escribeTablero t2
                 putStrLn $ " \n J " ++ show j ++ " ha ganado!"
             else do
