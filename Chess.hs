@@ -1,4 +1,4 @@
---hi
+import Data.Maybe
 import Data.List
 import Data.Matrix
 import Data.Char
@@ -9,8 +9,8 @@ import Data.Array
 
 fnQ = ["TN1", "CN1", "AN1", "QN0", "KN ", "AN2", "CN2", "TN2"]
 fnP = ["PN1", "PN2", "PN3", "PN4", "PN5", "PN6", "PN7", "PN8"]
-fbP = ["PB1", "PB2", "PB3", "PB4", "PB5", "PB6", "PN0", "PN9"]
-fbQ = ["TB1", "CB1", "AB1", "KB ", "QB0", "AB2", "CB2", "TB2"]
+fbP = ["PB1", "PB2", "PB3", "PB4", "PB5", "PB6", "PB7", "PN0"]
+fbQ = ["TB1", "CB1", "AB1", "KB ", "QB0", "AB2", " * ", "TB2"]
 
 
 tablero :: Matrix String
@@ -63,36 +63,28 @@ valido m (x,y) (xf, yf) j = if (j==1) then not (elem 'N' sust) && mov else not (
                 
 -- Obtenermos la posicion del primero en cumplir si es False o True
 primero_cumplir :: Bool -> [Bool]-> Int
-primero_cumplir n [] = 0
-primero_cumplir n (x:xs) = if x == n then 1 else primero_cumplir n xs + 1 
+primero_cumplir n xs = if  isNothing (findIndex (==n) xs) then 0 else fromJust (findIndex (==n) xs)
 
-recorridoHorizontal :: Matrix String -> (Int, Int) -> (Int, Int) -> String -> String -> Bool
-recorridoHorizontal matriz (x,y) (xf,yf) pieza sust = and [(getElem a b matriz)== " * " || (getElem a b matriz) == pieza || (getElem a b matriz) == sust  |(a,b) <-range((x,y),(xf,yf)) ]
+recorrido :: Matrix String -> (Int, Int) -> (Int, Int) -> [String]
+recorrido matriz (x,y) (xf,yf)
+    | (x==xf) = [getElem x b matriz | b<-[min y yf..max y yf]]
+    | (y==yf) = [getElem b y matriz | b<-[min x xf..max x xf]]
+    |(abs (xf - x) == abs (yf - y)) = [getElem a b matriz | (a,b)<- zip [min x xf..max x xf] [min y yf..max y yf]]
+    |otherwise = []
 
 
-recorridoDiagonal :: Matrix String -> (Int, Int) -> (Int, Int) -> String -> String -> Bool 
-recorridoDiagonal matriz (x,y) (xf,yf) pieza sust 
-    |(abs (xf - x) == abs (yf - y)) && (abs (xf - x) == 0) && (abs (yf - y) == 0) = if getElem x y matriz == pieza || getElem x y matriz == sust || getElem x y matriz == " * " then True else False
-    |(abs (xf - x) == abs (yf - y)) && (abs (xf - x) /= 0) && (abs (yf - y) /= 0) = if getElem x y matriz == pieza || getElem x y matriz == sust || getElem x y matriz == " * " then if direccion_x >=0 then if direccion_y >=0 then  cuadrante_a else cuadrante_d else if direccion_y >=0 then  cuadrante_b else cuadrante_c else False
-    |otherwise = False
-    where 
-        direccion_x = xf - x
-        direccion_y = yf - y
-        cuadrante_a = recorridoDiagonal matriz (x+1,y+1) (xf,yf) pieza sust
-        cuadrante_b = recorridoDiagonal matriz (x-1,y+1) (xf,yf) pieza sust
-        cuadrante_c = recorridoDiagonal matriz (x-1,y-1) (xf,yf) pieza sust
-        cuadrante_d = recorridoDiagonal matriz (x+1,y-1) (xf,yf) pieza sust
+recorridoPieza :: Matrix String -> (Int, Int) -> (Int, Int) -> String -> String -> Bool
+recorridoPieza matriz (x,y) (xf,yf) pieza sust = and [a== " * " || a == pieza || a == sust  | a <-recorrido matriz (x,y) (xf,yf) ]
 
---        ((abs (a - x)) == (abs (b - y)))
 
 --Comprobamos si el movimiento que queremos hacer sobre la pieza es correcto en función de qué pieza movamos
 movimiento ::  Matrix String -> (Int, Int) -> (Int, Int) -> Int -> String -> String -> Bool
 movimiento matriz (x,y) (xf, yf) j pieza sust
-    |elem 'T' pieza = if  (x == xf || y == yf) then if  recorridoHorizontal matriz (x,y) (xf, yf) pieza sust then True else False else False
-    |elem 'C' pieza = if  ((abs (xf -x)) == 2 && (abs (yf - y)) == 1) || ((abs (xf -x)) == 1 && (abs (yf - y)) == 2) then True else False
-    |elem 'K' pieza = if  ((abs (xf -x)) <= 1 && (abs (yf - y)) <= 1) then True else False
-    |elem 'A' pieza = if  recorridoDiagonal matriz (x,y) (xf, yf) pieza sust then True else False
-    |elem 'Q' pieza = if  recorridoDiagonal matriz (x,y) (xf, yf) pieza sust || (((x == xf || y == yf)) && ( recorridoHorizontal matriz (x,y) (xf, yf) pieza sust)) then True else False
+    |elem 'T' pieza = if  (x == xf || y == yf) then recorridoPieza matriz (x,y) (xf, yf) pieza sust else False
+    |elem 'C' pieza =((abs (xf -x)) == 2 && (abs (yf - y)) == 1) || ((abs (xf -x)) == 1 && (abs (yf - y)) == 2)
+    |elem 'K' pieza =((abs (xf -x)) <= 1 && (abs (yf - y)) <= 1)
+    |elem 'A' pieza = recorridoPieza matriz (x,y) (xf, yf) pieza sust
+    |elem 'Q' pieza = recorridoPieza matriz (x,y) (xf, yf) pieza sust
     |elem 'P' pieza = if j==1 then if elem 'B' sust then (xf-x==1) && abs(yf - y)==1 else (xf-x==1) && yf==y 
                     else if elem 'N' sust then (x - xf==1) && abs(yf - y)==1 else (x - xf==1) && yf==y
     |otherwise = (abs(xf-x) == abs (yf-y)) || x==xf || y==yf
@@ -237,9 +229,12 @@ juego t j = do
                 escribeTablero t2
                 putStrLn $ " \n J " ++ show j ++ " ha ganado!"
             else do
+                putStr "\ESC[2J"
                 let j2 = siguiente j
                 juego t2 j2
-        else juego t j
+        else do
+            putStr "\ESC[2J"
+            juego t j
     else do
         putStr "\ESC[2J"
         putStrLn $ " \n Se ha exedido el rango de la matriz " ++ show xf ++" "++ show yf
@@ -285,23 +280,25 @@ juegoIA t j al= do
         xf <- leeDigito "Elije fila de movimiento: "
         yf <- leeDigito "Elije columna de movimiento: "
 
-        print(range((x,y),(xf,yf)))
-        print( [(getElem a b t)  |(a,b) <-range((x,y),(xf,yf)) ])
-        print([(getElem a b t)== " * "  |(a,b) <-range((x,y),(xf,yf)) ])
-        print(valido t (x, y) (xf, yf) j)
-
-        if (valido t (x, y) (xf, yf) j) then do
-            let t2 = mover t (x, y) (xf, yf) j
-            if finalizado t2 j then do
-                putStr " \n"
-                escribeTablero t2
-                putStrLn $ " \n J " ++ show j ++ " ha ganado!"
+        if (1 <= xf &&  xf <= 8 && 1 <= yf &&  yf <= 8) then do
+            if (valido t (x, y) (xf, yf) j) then do
+                let t2 = mover t (x, y) (xf, yf) j
+                if finalizado t2 j then do
+                    putStr " \n"
+                    escribeTablero t2
+                    putStrLn $ " \n J " ++ show j ++ " ha ganado!"
+                else do
+                    putStr "\ESC[2J"
+                    let j2 = siguiente j
+                    escribeTablero t2
+                    juegoIA t2 j2 al
             else do
-                let j2 = siguiente j
-                escribeTablero t2
-                juegoIA t2 j2 al
-        else juegoIA t j al
-
+                putStr "\ESC[2J"
+                juegoIA t j al
+        else do
+            putStr "\ESC[2J"
+            putStrLn $ " \n Se ha exedido el rango de la matriz " ++ show xf ++" "++ show yf
+            juegoIA t j al
 
 jugar :: IO()
 jugar= do
