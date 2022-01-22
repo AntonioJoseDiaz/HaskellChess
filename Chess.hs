@@ -9,8 +9,8 @@ import Data.Array
 
 fnQ = ["TN1", "CN1", "AN1", "QN0", "KN ", "AN2", "CN2", "TN2"]
 fnP = ["PN1", "PN2", "PN3", "PN4", "PN5", "PN6", "PN7", "PN8"]
-fbP = ["PB1", "PB2", "PB3", "PB4", "PB5", "PB6", "PB7", "PN0"]
-fbQ = ["TB1", "CB1", "AB1", "KB ", "QB0", "AB2", " * ", "TB2"]
+fbP = ["PB1", "PB2", "PB3", "PB4", "PB5", "PB6", "PB7", "PB8"]
+fbQ = ["TB1", "CB1", "AB1", "KB ", "QB0", "AB2", "CB2", "TB2"]
 
 
 tablero :: Matrix String
@@ -87,7 +87,7 @@ movimiento matriz (x,y) (xf, yf) j pieza sust
     |elem 'Q' pieza = recorridoPieza matriz (x,y) (xf, yf) pieza sust
     |elem 'P' pieza = if j==1 then if elem 'B' sust then (xf-x==1) && abs(yf - y)==1 else (xf-x==1) && yf==y 
                     else if elem 'N' sust then (x - xf==1) && abs(yf - y)==1 else (x - xf==1) && yf==y
-    |otherwise = (abs(xf-x) == abs (yf-y)) || x==xf || y==yf
+    |otherwise = False
         
 peonReina :: Matrix String -> Int -> Matrix String
 peonReina matriz 1 = if pos_N /= 0 then setElem ("QN"++ show cont_N) (8, pos_N) matriz else matriz
@@ -138,8 +138,9 @@ leeFicha :: String  -> [String] ->IO String
 leeFicha c piezas= do
     putStr c
     ts <- getLine
-    if (not.null) ts && fichaValida ts piezas then
-        return ts
+    let ficha = if elem 'K'ts then ts++" " else ts
+    if (not.null) ficha && fichaValida ficha piezas then
+        return ficha
     else do
         putStrLn "ERROR: Ficha incorrecta"
         leeFicha c piezas
@@ -215,12 +216,11 @@ juego t j = do
     let y = posicionYFicha t f x
     xf <- leeDigito "Elije fila de movimiento: "
     yf <- leeDigito "Elije columna de movimiento: "
-    print(x)
-    print(y)
-    print(range((x,y),(xf,yf)))
-    print(range((xf,yf),(x,y)))
+
+
 
     if (1 <= xf &&  xf <= 8 && 1 <= yf &&  yf <= 8) then do
+
         if (valido t (x, y) (xf, yf) j) then do
             let t2 = mover t (x, y) (xf, yf) j
             
