@@ -148,6 +148,8 @@ jugar= do
 juego :: Matrix String -> Int -> IO ()
 juego t j = do
     putStr " \n"
+    putStrLn "        1     2     3     4     5     6     7     8"
+
     escribeTablero t
     putStr " \n "
     putStrLn $ "J " ++ show ((mod j 2)+1)
@@ -169,6 +171,7 @@ juego t j = do
             
             if finalizado t2 j then do
                 putStr " \n "
+                putStrLn "        1     2     3     4     5     6     7     8"
                 escribeTablero t2
                 putStrLn $ " \n J " ++ show ((mod j 2)+1) ++ " ha ganado!"
             else do
@@ -194,6 +197,7 @@ juegoIA t j al= do
         juegoIA ti j2 (al+2)
     else do
         putStr " \n"
+        putStrLn "        1     2     3     4     5     6     7     8"
         escribeTablero t
         putStr " \n "
         putStrLn $ "Jugador " ++ show j
@@ -211,6 +215,7 @@ juegoIA t j al= do
                 let t2 = mover t (x, y) (xf, yf) j
                 if finalizado t2 j then do
                     putStr " \n"
+                    putStrLn "        1     2     3     4     5     6     7     8"
                     escribeTablero t2
                     putStrLn $ " \n J " ++ show j ++ " ha ganado!"
                 else do
