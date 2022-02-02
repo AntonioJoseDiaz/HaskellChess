@@ -149,7 +149,6 @@ juego :: Matrix String -> Int -> IO ()
 juego t j = do
     putStr " \n"
     putStrLn "        1     2     3     4     5     6     7     8"
-
     escribeTablero t
     putStr " \n "
     putStrLn $ "J " ++ show ((mod j 2)+1)
@@ -170,19 +169,21 @@ juego t j = do
             let t2 = mover t (x, y) (xf, yf) j
             
             if finalizado t2 j then do
-                putStr " \n "
+                putStr " \n"
                 putStrLn "        1     2     3     4     5     6     7     8"
                 escribeTablero t2
                 putStrLn $ " \n J " ++ show ((mod j 2)+1) ++ " ha ganado!"
             else do
-                putStr "\ESC[2J"
+             --   putStr "\ESC[2J"
                 let j2 = siguiente j
                 juego t2 j2
         else do
-            putStr "\ESC[2J"
+           -- putStr "\ESC[2J"
+            putStrLn " \n Movimiento no valido "
             juego t j
+            
     else do
-        putStr "\ESC[2J"
+       -- putStr "\ESC[2J"
         putStrLn $ " \n Se ha exedido el rango de la matriz " ++ show xf ++" "++ show yf
         juego t j
 
@@ -221,6 +222,7 @@ juegoIA t j al= do
                 else do
                     putStr "\ESC[2J"
                     let j2 = siguiente j
+                    putStrLn "        1     2     3     4     5     6     7     8"
                     escribeTablero t2
                     juegoIA t2 j2 al
             else do
